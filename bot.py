@@ -12,6 +12,12 @@ from crypto_pay import CryptoPayAPI
 from aiogram.types import LabeledPrice, InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 import aioschedule
+from aiogram.dispatcher.handler import CancelHandler
+from aiogram.dispatcher.middlewares import BaseMiddleware
+from collections import defaultdict
+import time
+import re
+from typing import Optional
 
 # ID бота @CryptoBot для проверки вебхуков
 CRYPTO_BOT_ID = 1559501630
@@ -43,16 +49,85 @@ def get_price_label(duration: str) -> LabeledPrice:
         amount=settings['price']
     )
 
+# Добавляем класс антиспам middleware
+class AntiFloodMiddleware(BaseMiddleware):
+    def __init__(self, limit=3, interval=1):
+        self.limit = limit  # Максимальное количество сообщений
+        self.interval = interval  # Интервал в секундах
+        self.user_timeouts = defaultdict(list)  # Хранение времени сообщений пользователей
+        self.banned_users = set()  # Множество забаненных пользователей
+        super(AntiFloodMiddleware, self).__init__()
+
+    async def on_pre_process_message(self, message: types.Message, data: dict):
+        # Пропускаем сообщения от админа
+        if str(message.from_user.id) == ADMIN_ID:
+            return
+        
+        # Проверяем, не забанен ли пользователь
+        if message.from_user.id in self.banned_users:
+            await message.answer("Вы временно заблокированы за спам.")
+            raise CancelHandler()
+        
+        # Получаем текущее время
+        curr_time = time.time()
+        user_id = message.from_user.id
+        
+        # Очищаем старые записи
+        self.user_timeouts[user_id] = [t for t in self.user_timeouts[user_id] 
+                                     if curr_time - t < self.interval]
+        
+        # Добавляем новое время
+        self.user_timeouts[user_id].append(curr_time)
+        
+        # Проверяем количество сообщений
+        if len(self.user_timeouts[user_id]) > self.limit:
+            self.banned_users.add(user_id)
+            await message.answer(
+                "Вы отправляете сообщения слишком часто. "
+                "Вы заблокированы на 5 минут."
+            )
+            # Планируем разбан через 5 минут
+            asyncio.create_task(self.unban_user(user_id))
+            raise CancelHandler()
+
+    async def unban_user(self, user_id: int):
+        await asyncio.sleep(300)  # 5 минут
+        self.banned_users.discard(user_id)
+        self.user_timeouts[user_id].clear()
+
+# Добавляем функции валидации
+def sanitize_input(text: str) -> Optional[str]:
+    """Очищает входной текст от потенциально опасных символов"""
+    if not text:
+        return None
+    # Удаляем специальные символы и ограничиваем длину
+    cleaned = re.sub(r'[^\w\s-]', '', text)
+    return cleaned[:1000]  # Ограничиваем длину текста
+
+def validate_user_id(user_id: int) -> bool:
+    """Проверяет валидность user_id"""
+    return isinstance(user_id, int) and user_id > 0
+
+def validate_amount(amount: float) -> bool:
+    """Проверяет валидность суммы платежа"""
+    return isinstance(amount, (int, float)) and 0 < amount < 1000000
+
 @dp.message_handler(commands=['start'])
 async def start_handler(message: types.Message):
-    global pool
-    # Сохраняем пользователя в базу
-    await add_user(pool, message.from_user)
+    if not validate_user_id(message.from_user.id):
+        await message.answer("Ошибка валидации.")
+        return
     
-    await message.answer(
-        "Добро пожаловать! Выберите срок подписки:",
-        reply_markup=get_payment_keyboard()
-    )
+    global pool
+    try:
+        await add_user(pool, message.from_user)
+        await message.answer(
+            "Добро пожаловать! Выберите срок подписки:",
+            reply_markup=get_payment_keyboard()
+        )
+    except Exception as e:
+        print(f"Error in start_handler: {e}")
+        await message.answer("Произошла ошибка. Попробуйте позже.")
 
 @dp.callback_query_handler(lambda c: c.data.startswith('duration_'))
 async def process_duration_selection(callback_query: types.CallbackQuery, state: FSMContext):
@@ -137,46 +212,65 @@ async def process_p2p(callback_query: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query_handler(lambda c: c.data.startswith('confirm_'))
 async def confirm_payment(callback_query: types.CallbackQuery, state: FSMContext):
-    global pool
-    user_id = int(callback_query.data.split('_')[1])
-    
-    # Получаем данные из состояния
-    data = await state.get_data()
-    amount = data.get('amount', 0)
-    
-    # Определяем тип подписки на основе суммы
-    if amount >= 500:
-        duration = 'forever'
-    elif amount >= 100:
-        duration = 'year'
-    else:
-        duration = 'month'
-    
-    await add_subscription(
-        pool,
-        user_id,
-        duration,
-        'p2p',
-        amount
-    )
-    
-    # Добавляем пользователя в канал
-    await bot.approve_chat_join_request(CHANNEL_ID, user_id)
-    
-    duration_text = {
-        'month': 'месяц',
-        'year': 'год',
-        'forever': 'неограниченный срок'
-    }
-    
-    await bot.send_message(
-        user_id,
-        f"Ваша оплата подтверждена! Доступ к каналу открыт на {duration_text[duration]}."
-    )
-    await bot.answer_callback_query(callback_query.id)
-    
-    # Очищаем состояние
-    await state.finish()
+    try:
+        user_id = int(callback_query.data.split('_')[1])
+        if not validate_user_id(user_id):
+            await bot.answer_callback_query(
+                callback_query.id,
+                "Ошибка валидации."
+            )
+            return
+        
+        # Получаем данные из состояния
+        data = await state.get_data()
+        amount = data.get('amount', 0)
+        
+        if not validate_amount(amount):
+            await bot.answer_callback_query(
+                callback_query.id,
+                "Некорректная сумма платежа."
+            )
+            return
+        
+        # Определяем тип подписки на основе суммы
+        if amount >= 500:
+            duration = 'forever'
+        elif amount >= 100:
+            duration = 'year'
+        else:
+            duration = 'month'
+        
+        await add_subscription(
+            pool,
+            user_id,
+            duration,
+            'p2p',
+            amount
+        )
+        
+        # Добавляем пользователя в канал
+        await bot.approve_chat_join_request(CHANNEL_ID, user_id)
+        
+        duration_text = {
+            'month': 'месяц',
+            'year': 'год',
+            'forever': 'неограниченный срок'
+        }
+        
+        await bot.send_message(
+            user_id,
+            f"Ваша оплата подтверждена! Доступ к каналу открыт на {duration_text[duration]}."
+        )
+        await bot.answer_callback_query(callback_query.id)
+        
+        # Очищаем состояние
+        await state.finish()
+    except Exception as e:
+        print(f"Error in confirm_payment: {e}")
+        await bot.answer_callback_query(
+            callback_query.id,
+            "Произошла ошибка. Попробуйте позже."
+        )
 
 @dp.message_handler(commands=['admin'])
 async def admin_panel(message: types.Message):
@@ -291,24 +385,28 @@ async def scheduler():
 
 async def on_startup(dispatcher: Dispatcher):
     global pool
-    # Создаем пул соединений с базой данных
-    pool = await create_pool()
-    
-    # Инициализируем базу данных
-    await init_db(pool)
-    
-    # Устанавливаем команды бота
-    await bot.set_my_commands([
-        types.BotCommand("start", "Начать работу с ботом"),
-        types.BotCommand("subscriptions", "Мои подписки"),
-        types.BotCommand("admin", "Панель администратора")
-    ])
-    
-    # Сохраняем пул в диспетчере бота для доступа из хендлеров
-    dispatcher["db_pool"] = pool
-    
-    # Запускаем планировщик
-    asyncio.create_task(scheduler())
+    try:
+        # Создаем пул соединений с базой данных
+        pool = await create_pool()
+        
+        # Инициализируем базу данных
+        await init_db(pool)
+        
+        # Устанавливаем команды бота
+        await bot.set_my_commands([
+            types.BotCommand("start", "Начать работу с ботом"),
+            types.BotCommand("subscriptions", "Мои подписки"),
+            types.BotCommand("admin", "Панель администратора")
+        ])
+        
+        # Сохраняем пул в диспетчере бота для доступа из хендлеров
+        dispatcher["db_pool"] = pool
+        
+        # Запускаем планировщик
+        asyncio.create_task(scheduler())
+    except Exception as e:
+        print(f"Error in on_startup: {e}")
+        raise
 
 @dp.callback_query_handler(lambda c: c.data.startswith('crypto_'))
 async def process_crypto_payment(callback_query: types.CallbackQuery, state: FSMContext):
@@ -463,4 +561,16 @@ async def subscriptions_command(message: types.Message):
     await show_subscriptions(callback_query)
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup) 
+    # Регистрируем middleware для защиты от флуда
+    dp.middleware.setup(AntiFloodMiddleware(limit=3, interval=1))
+    
+    # Запускаем бота с обработкой ошибок
+    try:
+        executor.start_polling(
+            dp,
+            skip_updates=True,
+            on_startup=on_startup,
+            timeout=60
+        )
+    except Exception as e:
+        print(f"Critical error: {e}") 
