@@ -1,56 +1,52 @@
-import aiosqlite
-import asyncio
+import asyncpg
 from datetime import datetime, timedelta
+from config import DB_URL
+import asyncio
 from aiogram import types
-import os
-
-DB_PATH = 'bot_database.db'
 
 async def create_pool():
-    # В SQLite не нужен пул соединений, возвращаем путь к базе
-    return DB_PATH
+    return await asyncpg.create_pool(DB_URL)
 
-async def init_db():
-    async with aiosqlite.connect(DB_PATH) as db:
+async def init_db(pool):
+    async with pool.acquire() as conn:
         # Создаем таблицу подписок
-        await db.execute('''
+        await conn.execute('''
             CREATE TABLE IF NOT EXISTS subscriptions (
-                user_id INTEGER PRIMARY KEY,
+                user_id BIGINT PRIMARY KEY,
                 start_date TIMESTAMP NOT NULL,
                 end_date TIMESTAMP,
-                subscription_type TEXT NOT NULL,
-                payment_method TEXT NOT NULL,
-                amount REAL NOT NULL
+                subscription_type VARCHAR(10) NOT NULL,
+                payment_method VARCHAR(10) NOT NULL,
+                amount DECIMAL(10, 2) NOT NULL
             )
         ''')
         
-        # Создаем таблицу пользователей
-        await db.execute('''
+        # Создаем таблицу всех пользователей бота
+        await conn.execute('''
             CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                username TEXT,
-                first_name TEXT,
-                last_name TEXT,
-                joined_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                user_id BIGINT PRIMARY KEY,
+                username VARCHAR(255),
+                first_name VARCHAR(255),
+                last_name VARCHAR(255),
+                joined_date TIMESTAMP NOT NULL DEFAULT NOW()
             )
         ''')
         
         # Создаем таблицу платежей
-        await db.execute('''
+        await conn.execute('''
             CREATE TABLE IF NOT EXISTS payments (
-                payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                amount REAL NOT NULL,
-                status TEXT NOT NULL,
-                payment_method TEXT NOT NULL,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                payment_id SERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
+                amount DECIMAL(10, 2) NOT NULL,
+                status VARCHAR(20) NOT NULL,
+                payment_method VARCHAR(10) NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
                 completed_at TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES subscriptions(user_id)
             )
         ''')
-        await db.commit()
 
-async def add_subscription(db_path, user_id: int, duration: str, payment_method: str, amount: float):
+async def add_subscription(pool, user_id: int, duration: str, payment_method: str, amount: float):
     now = datetime.now()
     
     if duration == 'month':
@@ -62,67 +58,94 @@ async def add_subscription(db_path, user_id: int, duration: str, payment_method:
     else:
         raise ValueError("Invalid duration")
     
-    async with aiosqlite.connect(db_path) as db:
+    async with pool.acquire() as conn:
         # Добавляем или обновляем подписку
-        await db.execute('''
-            INSERT OR REPLACE INTO subscriptions 
-            (user_id, start_date, end_date, subscription_type, payment_method, amount)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (user_id, now, end_date, duration, payment_method, amount))
+        await conn.execute('''
+            INSERT INTO subscriptions (user_id, start_date, end_date, subscription_type, payment_method, amount)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (user_id) DO UPDATE 
+            SET start_date = $2,
+                end_date = $3,
+                subscription_type = $4,
+                payment_method = $5,
+                amount = $6
+        ''', user_id, now, end_date, duration, payment_method, amount)
         
         # Записываем платёж
-        await db.execute('''
+        await conn.execute('''
             INSERT INTO payments (user_id, amount, status, payment_method, completed_at)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (user_id, amount, 'completed', payment_method, now))
-        
-        await db.commit()
+            VALUES ($1, $2, $3, $4, $5)
+        ''', user_id, amount, 'completed', payment_method, now)
 
-async def get_expiring_subscriptions(db_path, days_left: int):
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
-        date_check = datetime.now() + timedelta(days=days_left)
-        
-        query = '''
+async def get_expiring_subscriptions(pool, days_left: int):
+    """
+    Получает список пользователей, у которых подписка истекает через указанное количество дней
+    """
+    async with pool.acquire() as conn:
+        expiring = await conn.fetch('''
             SELECT user_id, end_date 
             FROM subscriptions 
             WHERE end_date IS NOT NULL 
-            AND end_date <= ?
-            AND end_date > ?
-        '''
-        
-        async with db.execute(query, (date_check, datetime.now())) as cursor:
-            rows = await cursor.fetchall()
-            return [(row['user_id'], datetime.fromisoformat(row['end_date'])) for row in rows]
+            AND end_date > NOW() 
+            AND end_date <= NOW() + interval '1 day' * $1
+            AND end_date > NOW() + interval '1 day' * ($1 - 1)
+        ''', days_left)
+        return [(record['user_id'], record['end_date']) for record in expiring]
 
-async def check_expired_subscriptions(db_path):
-    async with aiosqlite.connect(db_path) as db:
-        now = datetime.now()
-        async with db.execute('''
+async def check_expired_subscriptions(pool):
+    async with pool.acquire() as conn:
+        expired = await conn.fetch('''
             SELECT user_id FROM subscriptions 
-            WHERE end_date IS NOT NULL AND end_date < ?
-        ''', (now,)) as cursor:
-            rows = await cursor.fetchall()
-            return [row[0] for row in rows]
+            WHERE end_date IS NOT NULL AND end_date < NOW()
+        ''')
+        return [record['user_id'] for record in expired]
 
-async def add_user(db_path, user: types.User):
-    async with aiosqlite.connect(db_path) as db:
-        await db.execute('''
-            INSERT OR REPLACE INTO users (user_id, username, first_name, last_name)
-            VALUES (?, ?, ?, ?)
-        ''', (user.id, user.username, user.first_name, user.last_name))
-        await db.commit()
+async def is_active_subscription(pool, user_id: int) -> bool:
+    async with pool.acquire() as conn:
+        sub = await conn.fetchrow('''
+            SELECT * FROM subscriptions 
+            WHERE user_id = $1 
+            AND (end_date IS NULL OR end_date > NOW())
+        ''', user_id)
+        return bool(sub)
 
-async def get_all_users(db_path):
-    async with aiosqlite.connect(db_path) as db:
-        async with db.execute('SELECT user_id FROM users') as cursor:
-            rows = await cursor.fetchall()
-            return [row[0] for row in rows]
+async def add_pending_payment(pool, user_id: int, amount: float, payment_method: str):
+    async with pool.acquire() as conn:
+        await conn.execute('''
+            INSERT INTO payments (user_id, amount, status, payment_method)
+            VALUES ($1, $2, $3, $4)
+        ''', user_id, amount, 'pending', payment_method)
 
-async def get_user_subscriptions(db_path, user_id: int):
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
-        async with db.execute('''
+async def confirm_payment(pool, user_id: int, payment_id: int):
+    async with pool.acquire() as conn:
+        await conn.execute('''
+            UPDATE payments 
+            SET status = 'completed', completed_at = NOW()
+            WHERE payment_id = $1 AND user_id = $2
+        ''', payment_id, user_id) 
+
+async def add_user(pool, user: types.User):
+    async with pool.acquire() as conn:
+        await conn.execute('''
+            INSERT INTO users (user_id, username, first_name, last_name)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (user_id) DO UPDATE 
+            SET username = $2,
+                first_name = $3,
+                last_name = $4
+        ''', user.id, user.username, user.first_name, user.last_name)
+
+async def get_all_users(pool):
+    async with pool.acquire() as conn:
+        users = await conn.fetch('SELECT user_id FROM users')
+        return [record['user_id'] for record in users]
+
+async def get_user_subscriptions(pool, user_id: int):
+    """
+    Получает все подписки пользователя с информацией о статусе
+    """
+    async with pool.acquire() as conn:
+        subscriptions = await conn.fetch('''
             SELECT 
                 subscription_type,
                 payment_method,
@@ -131,16 +154,26 @@ async def get_user_subscriptions(db_path, user_id: int):
                 amount,
                 CASE 
                     WHEN end_date IS NULL THEN 'active'
-                    WHEN end_date < CURRENT_TIMESTAMP THEN 'expired'
+                    WHEN end_date < NOW() THEN 'expired'
                     ELSE 'active'
                 END as status,
                 CASE 
                     WHEN end_date IS NULL THEN NULL
-                    WHEN end_date < CURRENT_TIMESTAMP THEN NULL
-                    ELSE (julianday(end_date) - julianday(CURRENT_TIMESTAMP))
+                    WHEN end_date < NOW() THEN NULL
+                    ELSE EXTRACT(DAY FROM (end_date - NOW()))::integer
                 END as days_left
             FROM subscriptions 
-            WHERE user_id = ?
+            WHERE user_id = $1 
             ORDER BY start_date DESC
-        ''', (user_id,)) as cursor:
-            return await cursor.fetchall() 
+        ''', user_id)
+        return subscriptions
+
+async def test_connection():
+    try:
+        conn = await asyncpg.connect('postgresql://bot_user:your_password@localhost/telegram_bot')
+        await conn.close()
+        print("Подключение успешно!")
+    except Exception as e:
+        print(f"Ошибка подключения: {e}")
+
+asyncio.run(test_connection()) 

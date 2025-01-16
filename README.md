@@ -13,56 +13,14 @@
 
 2. При установке на Windows обязательно поставьте галочку "Add Python to PATH"
 
-### 2. Установка PostgreSQL
-1. Скачайте PostgreSQL:
-   - Windows: [Установщик PostgreSQL](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)
-   - Linux: `sudo apt-get install postgresql postgresql-contrib`
-   - macOS: [PostgreSQL для macOS](https://www.postgresql.org/download/macosx/)
-
-2. Запомните пароль, который вы укажете при установке
-
-## Настройка проекта
-
-### 1. Создание базы данных
-Откройте терминал (командную строку):
-
-#### Windows:
-
-Перейдите в папку с PostgreSQL
-
-```bash
-cd "C:\Program Files\PostgreSQL\17\bin"
-```
-
-Запустите psql
-
-```bash
-psql -U postgres
-```
-
-**Linux/Mac:**
-```bash
-sudo -u postgres psql
-```
-
-Выполните следующие команды SQL:
-```sql
-CREATE USER bot_user WITH PASSWORD 'your_password';
-CREATE DATABASE telegram_bot;
-GRANT ALL PRIVILEGES ON DATABASE telegram_bot TO bot_user;
-\c telegram_bot
-GRANT ALL ON SCHEMA public TO bot_user;
-\q
-```
-
-### 4. Установка зависимостей
+### 2. Установка зависимостей
 
 Откройте командную строку в папке с ботом и выполните:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Настройка конфигурации
+### 3. Настройка конфигурации
 
 1. Откройте файл `config.py`
 2. Заполните следующие параметры:
@@ -70,11 +28,9 @@ pip install -r requirements.txt
    BOT_TOKEN = "YOUR_BOT_TOKEN"  # Получите у @BotFather
    CHANNEL_ID = "YOUR_CHANNEL_ID"  # ID вашего приватного канала
    ADMIN_ID = "YOUR_ADMIN_ID"  # Ваш Telegram ID
-   DB_URL = "postgresql://bot_user:your_password@localhost/telegram_bot"  # Замените your_password на пароль, который вы указали при создании базы данных
-   PROVIDER_TOKEN = "YOUR_PROVIDER_TOKEN"  # Токен от Telegram Payments (получите у @BotFather)
-   ```requirements.txt
+   ```
 
-### 6. Настройка канала
+### 4. Настройка канала
 
 1. Создайте приватный канал в Telegram
 2. Добавьте бота в администраторы канала
@@ -105,18 +61,13 @@ python bot.py
 
 ## Возможные проблемы
 
-### Ошибка подключения к базе данных
-- Проверьте правильность данных в DB_URL
-- Убедитесь, что PostgreSQL запущен
-- Проверьте правильность создания пользователя и базы данных
-
 ### Ошибка при запуске бота
 - Проверьте, что все токены в config.py указаны правильно
 - Убедитесь, что бот добавлен в администраторы канала
 
 ## Требования
 - Python 3.8+
-- PostgreSQL 12+
+- SQLite (входит в стандартную библиотеку Python)
 - Операционная система: Windows/Linux/MacOS
 
 ## Дополнительная информация

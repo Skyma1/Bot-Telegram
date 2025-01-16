@@ -49,4 +49,4 @@ PAYMENT_METHODS = {
             'ETH': '⟠'
         }
     }
-} 
+}
