@@ -31,7 +31,7 @@
 Перейдите в папку с PostgreSQL
 
 ```bash
-cd "C:\Program Files\PostgreSQL\{version}\bin"
+cd "C:\Program Files\PostgreSQL\17\bin"
 ```
 
 Запустите psql

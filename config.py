@@ -1,7 +1,6 @@
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-CHANNEL_ID = "YOUR_CHANNEL_ID"
-ADMIN_ID = "YOUR_ADMIN_ID"
-DB_URL = "postgresql://bot_user:your_password@localhost/telegram_bot"
+BOT_TOKEN = "ваш_токен_бота"
+CHANNEL_ID = "ваш_id_канала"
+ADMIN_ID = "ваш_id"
 PROVIDER_TOKEN = "YOUR_PROVIDER_TOKEN"  # Токен для Telegram Payments
 CRYPTO_PAY_TOKEN = "YOUR_CRYPTO_PAY_TOKEN"  # Токен от @CryptoBot -> Crypto Pay -> Create App
 CRYPTO_PAY_API_URL = "https://pay.crypt.bot/api"  # Основная сеть
