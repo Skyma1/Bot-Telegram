@@ -1,0 +1,297 @@
+2025-01-16 16:08:42,844 - bot_logger - INFO - Bot starting...
+2025-01-16 16:08:42,845 - bot_logger - INFO - Middleware setup completed
+2025-01-16 16:08:43,165 - bot_logger - INFO - Starting bot...
+2025-01-16 16:08:47,259 - bot_logger - ERROR - Error in on_startup: [WinError 1225] The remote computer refused the network connection
+Traceback (most recent call last):
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 434, in on_startup
+    pool = await create_pool()
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\db.py", line 8, in create_pool
+    return await asyncpg.create_pool(DB_URL)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 409, in _async__init__
+    await self._initialize()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 437, in _initialize
+    await first_ch.connect()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 129, in connect
+    self._con = await self._pool._get_new_connection()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 514, in _get_new_connection
+    con = await connection.connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connection.py", line 2114, in connect
+    return await connect_utils._connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 1011, in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 982, in _connect
+    conn = await _connect_addr(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 808, in _connect_addr
+    return await __connect_addr(params, timeout, True, *args)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 860, in __connect_addr
+    tr, pr = await compat.wait_for(connector, timeout=timeout)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\compat.py", line 60, in wait_for
+    return await asyncio.wait_for(fut, timeout)
+  File "C:\Program Files\Python310\lib\asyncio\tasks.py", line 447, in wait_for
+    return fut.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 719, in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1060, in create_connection
+    raise exceptions[0]
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1040, in create_connection
+    sock = await self._connect_sock(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 954, in _connect_sock
+    await self.sock_connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\proactor_events.py", line 704, in sock_connect
+    return await self._proactor.connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 812, in _poll
+    value = callback(transferred, key, ov)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 599, in finish_connect
+    ov.getresult()
+ConnectionRefusedError: [WinError 1225] The remote computer refused the network connection
+2025-01-16 16:08:47,424 - bot_logger - CRITICAL - Critical error: [WinError 1225] The remote computer refused the network connection
+Traceback (most recent call last):
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 628, in <module>
+    executor.start_polling(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 45, in start_polling
+    executor.start_polling(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 320, in start_polling
+    loop.run_until_complete(self._startup_polling())
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 641, in run_until_complete
+    return future.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 377, in _startup_polling
+    await callback(self.dispatcher)
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 434, in on_startup
+    pool = await create_pool()
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\db.py", line 8, in create_pool
+    return await asyncpg.create_pool(DB_URL)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 409, in _async__init__
+    await self._initialize()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 437, in _initialize
+    await first_ch.connect()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 129, in connect
+    self._con = await self._pool._get_new_connection()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 514, in _get_new_connection
+    con = await connection.connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connection.py", line 2114, in connect
+    return await connect_utils._connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 1011, in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 982, in _connect
+    conn = await _connect_addr(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 808, in _connect_addr
+    return await __connect_addr(params, timeout, True, *args)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 860, in __connect_addr
+    tr, pr = await compat.wait_for(connector, timeout=timeout)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\compat.py", line 60, in wait_for
+    return await asyncio.wait_for(fut, timeout)
+  File "C:\Program Files\Python310\lib\asyncio\tasks.py", line 447, in wait_for
+    return fut.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 719, in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1060, in create_connection
+    raise exceptions[0]
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1040, in create_connection
+    sock = await self._connect_sock(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 954, in _connect_sock
+    await self.sock_connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\proactor_events.py", line 704, in sock_connect
+    return await self._proactor.connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 812, in _poll
+    value = callback(transferred, key, ov)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 599, in finish_connect
+    ov.getresult()
+ConnectionRefusedError: [WinError 1225] The remote computer refused the network connection
+2025-01-16 16:10:26,748 - bot_logger - INFO - Bot starting...
+2025-01-16 16:10:26,749 - bot_logger - INFO - Middleware setup completed
+2025-01-16 16:10:27,019 - bot_logger - INFO - Starting bot...
+2025-01-16 16:10:31,110 - bot_logger - ERROR - Error in on_startup: [WinError 1225] The remote computer refused the network connection
+Traceback (most recent call last):
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 434, in on_startup
+    pool = await create_pool()
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\db.py", line 8, in create_pool
+    return await asyncpg.create_pool(DB_URL)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 409, in _async__init__
+    await self._initialize()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 437, in _initialize
+    await first_ch.connect()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 129, in connect
+    self._con = await self._pool._get_new_connection()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 514, in _get_new_connection
+    con = await connection.connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connection.py", line 2114, in connect
+    return await connect_utils._connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 1011, in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 982, in _connect
+    conn = await _connect_addr(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 808, in _connect_addr
+    return await __connect_addr(params, timeout, True, *args)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 860, in __connect_addr
+    tr, pr = await compat.wait_for(connector, timeout=timeout)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\compat.py", line 60, in wait_for
+    return await asyncio.wait_for(fut, timeout)
+  File "C:\Program Files\Python310\lib\asyncio\tasks.py", line 447, in wait_for
+    return fut.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 719, in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1060, in create_connection
+    raise exceptions[0]
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1040, in create_connection
+    sock = await self._connect_sock(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 954, in _connect_sock
+    await self.sock_connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\proactor_events.py", line 704, in sock_connect
+    return await self._proactor.connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 812, in _poll
+    value = callback(transferred, key, ov)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 599, in finish_connect
+    ov.getresult()
+ConnectionRefusedError: [WinError 1225] The remote computer refused the network connection
+2025-01-16 16:10:31,116 - bot_logger - CRITICAL - Critical error: [WinError 1225] The remote computer refused the network connection
+Traceback (most recent call last):
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 628, in <module>
+    executor.start_polling(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 45, in start_polling
+    executor.start_polling(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 320, in start_polling
+    loop.run_until_complete(self._startup_polling())
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 641, in run_until_complete
+    return future.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 377, in _startup_polling
+    await callback(self.dispatcher)
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 434, in on_startup
+    pool = await create_pool()
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\db.py", line 8, in create_pool
+    return await asyncpg.create_pool(DB_URL)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 409, in _async__init__
+    await self._initialize()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 437, in _initialize
+    await first_ch.connect()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 129, in connect
+    self._con = await self._pool._get_new_connection()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 514, in _get_new_connection
+    con = await connection.connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connection.py", line 2114, in connect
+    return await connect_utils._connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 1011, in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 982, in _connect
+    conn = await _connect_addr(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 808, in _connect_addr
+    return await __connect_addr(params, timeout, True, *args)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 860, in __connect_addr
+    tr, pr = await compat.wait_for(connector, timeout=timeout)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\compat.py", line 60, in wait_for
+    return await asyncio.wait_for(fut, timeout)
+  File "C:\Program Files\Python310\lib\asyncio\tasks.py", line 447, in wait_for
+    return fut.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 719, in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1060, in create_connection
+    raise exceptions[0]
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1040, in create_connection
+    sock = await self._connect_sock(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 954, in _connect_sock
+    await self.sock_connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\proactor_events.py", line 704, in sock_connect
+    return await self._proactor.connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 812, in _poll
+    value = callback(transferred, key, ov)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 599, in finish_connect
+    ov.getresult()
+ConnectionRefusedError: [WinError 1225] The remote computer refused the network connection
+2025-01-16 16:10:47,386 - bot_logger - INFO - Bot starting...
+2025-01-16 16:10:47,387 - bot_logger - INFO - Middleware setup completed
+2025-01-16 16:10:47,664 - bot_logger - INFO - Starting bot...
+2025-01-16 16:10:51,747 - bot_logger - ERROR - Error in on_startup: [WinError 1225] The remote computer refused the network connection
+Traceback (most recent call last):
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 434, in on_startup
+    pool = await create_pool()
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\db.py", line 8, in create_pool
+    return await asyncpg.create_pool(DB_URL)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 409, in _async__init__
+    await self._initialize()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 437, in _initialize
+    await first_ch.connect()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 129, in connect
+    self._con = await self._pool._get_new_connection()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 514, in _get_new_connection
+    con = await connection.connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connection.py", line 2114, in connect
+    return await connect_utils._connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 1011, in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 982, in _connect
+    conn = await _connect_addr(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 808, in _connect_addr
+    return await __connect_addr(params, timeout, True, *args)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 860, in __connect_addr
+    tr, pr = await compat.wait_for(connector, timeout=timeout)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\compat.py", line 60, in wait_for
+    return await asyncio.wait_for(fut, timeout)
+  File "C:\Program Files\Python310\lib\asyncio\tasks.py", line 447, in wait_for
+    return fut.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 719, in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1060, in create_connection
+    raise exceptions[0]
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1040, in create_connection
+    sock = await self._connect_sock(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 954, in _connect_sock
+    await self.sock_connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\proactor_events.py", line 704, in sock_connect
+    return await self._proactor.connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 812, in _poll
+    value = callback(transferred, key, ov)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 599, in finish_connect
+    ov.getresult()
+ConnectionRefusedError: [WinError 1225] The remote computer refused the network connection
+2025-01-16 16:10:51,754 - bot_logger - CRITICAL - Critical error: [WinError 1225] The remote computer refused the network connection
+Traceback (most recent call last):
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 628, in <module>
+    executor.start_polling(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 45, in start_polling
+    executor.start_polling(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 320, in start_polling
+    loop.run_until_complete(self._startup_polling())
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 641, in run_until_complete
+    return future.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\aiogram\utils\executor.py", line 377, in _startup_polling
+    await callback(self.dispatcher)
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\bot.py", line 434, in on_startup
+    pool = await create_pool()
+  File "C:\Users\Soqwsti\Desktop\Bot-Telegram-main\db.py", line 8, in create_pool
+    return await asyncpg.create_pool(DB_URL)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 409, in _async__init__
+    await self._initialize()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 437, in _initialize
+    await first_ch.connect()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 129, in connect
+    self._con = await self._pool._get_new_connection()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\pool.py", line 514, in _get_new_connection
+    con = await connection.connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connection.py", line 2114, in connect
+    return await connect_utils._connect(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 1011, in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 982, in _connect
+    conn = await _connect_addr(
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 808, in _connect_addr
+    return await __connect_addr(params, timeout, True, *args)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 860, in __connect_addr
+    tr, pr = await compat.wait_for(connector, timeout=timeout)
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\compat.py", line 60, in wait_for
+    return await asyncio.wait_for(fut, timeout)
+  File "C:\Program Files\Python310\lib\asyncio\tasks.py", line 447, in wait_for
+    return fut.result()
+  File "C:\Users\Soqwsti\AppData\Roaming\Python\Python310\site-packages\asyncpg\connect_utils.py", line 719, in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1060, in create_connection
+    raise exceptions[0]
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 1040, in create_connection
+    sock = await self._connect_sock(
+  File "C:\Program Files\Python310\lib\asyncio\base_events.py", line 954, in _connect_sock
+    await self.sock_connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\proactor_events.py", line 704, in sock_connect
+    return await self._proactor.connect(sock, address)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 812, in _poll
+    value = callback(transferred, key, ov)
+  File "C:\Program Files\Python310\lib\asyncio\windows_events.py", line 599, in finish_connect
+    ov.getresult()
+ConnectionRefusedError: [WinError 1225] The remote computer refused the network connection

@@ -18,6 +18,10 @@ from collections import defaultdict
 import time
 import re
 from typing import Optional
+import logging
+import sys
+from logging.handlers import RotatingFileHandler
+import nest_asyncio
 
 # ID бота @CryptoBot для проверки вебхуков
 CRYPTO_BOT_ID = 1559501630
@@ -377,20 +381,62 @@ async def check_subscriptions():
             print(f"Error removing user {user_id}: {e}")
 
 async def scheduler():
-    # Проверяем подписки каждый час
-    aioschedule.every().hour.at(":00").do(check_subscriptions)
-    while True:
-        await aioschedule.run_pending()
-        await asyncio.sleep(3600)  # проверка каждый час
+    try:
+        # Проверяем подписки каждый час
+        aioschedule.every().hour.at(":00").do(check_subscriptions)
+        while True:
+            await aioschedule.run_pending()
+            await asyncio.sleep(3600)  # проверка каждый час
+    except Exception as e:
+        logger = logging.getLogger('bot_logger')
+        logger.error(f"Error in scheduler: {e}", exc_info=True)
 
+# Настройка логирования
+def setup_logging():
+    # Создаем логгер
+    logger = logging.getLogger('bot_logger')
+    logger.setLevel(logging.DEBUG)
+    
+    # Создаем обработчик для записи в файл
+    file_handler = RotatingFileHandler(
+        'bot.log',
+        maxBytes=1024*1024,  # 1MB
+        backupCount=5,
+        encoding='utf-8'
+    )
+    file_handler.setLevel(logging.DEBUG)
+    
+    # Создаем обработчик для вывода в консоль
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    
+    # Создаем форматтер
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+    
+    # Добавляем обработчики к логгеру
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    return logger
+
+# Модифицируем функцию on_startup
 async def on_startup(dispatcher: Dispatcher):
     global pool
+    logger = logging.getLogger('bot_logger')
     try:
+        logger.info("Starting bot...")
+        
         # Создаем пул соединений с базой данных
         pool = await create_pool()
+        logger.info("Database pool created successfully")
         
         # Инициализируем базу данных
         await init_db(pool)
+        logger.info("Database initialized successfully")
         
         # Устанавливаем команды бота
         await bot.set_my_commands([
@@ -398,14 +444,17 @@ async def on_startup(dispatcher: Dispatcher):
             types.BotCommand("subscriptions", "Мои подписки"),
             types.BotCommand("admin", "Панель администратора")
         ])
+        logger.info("Bot commands set successfully")
         
         # Сохраняем пул в диспетчере бота для доступа из хендлеров
         dispatcher["db_pool"] = pool
         
         # Запускаем планировщик
         asyncio.create_task(scheduler())
+        logger.info("Scheduler started successfully")
+        
     except Exception as e:
-        print(f"Error in on_startup: {e}")
+        logger.error(f"Error in on_startup: {e}", exc_info=True)
         raise
 
 @dp.callback_query_handler(lambda c: c.data.startswith('crypto_'))
@@ -560,17 +609,35 @@ async def subscriptions_command(message: types.Message):
     )
     await show_subscriptions(callback_query)
 
+# Модифицируем основной блок запуска
 if __name__ == '__main__':
-    # Регистрируем middleware для защиты от флуда
-    dp.middleware.setup(AntiFloodMiddleware(limit=3, interval=1))
+    # Инициализируем логгер
+    logger = setup_logging()
+    logger.info("Bot starting...")
     
-    # Запускаем бота с обработкой ошибок
+    # Создаем и устанавливаем event loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     try:
+        # Регистрируем middleware для защиты от флуда
+        dp.middleware.setup(AntiFloodMiddleware(limit=3, interval=1))
+        logger.info("Middleware setup completed")
+        
+        # Запускаем бота
         executor.start_polling(
             dp,
             skip_updates=True,
             on_startup=on_startup,
-            timeout=60
+            timeout=60,
+            loop=loop
         )
     except Exception as e:
-        print(f"Critical error: {e}") 
+        logger.critical(f"Critical error: {e}", exc_info=True)
+        sys.exit(1)
+    finally:
+        # Закрываем соединение с базой данных при выходе
+        if pool:
+            loop.run_until_complete(pool.close())
+            logger.info("Database connection closed")
+        loop.close() 
